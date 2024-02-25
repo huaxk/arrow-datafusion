@@ -23,7 +23,7 @@ use std::str::FromStr;
 use std::sync::{Arc, OnceLock};
 
 use datafusion::error::{DataFusionError, Result};
-use datafusion::execution::context::SessionConfig;
+use datafusion::execution::context::{SessionConfig, SessionState};
 use datafusion::execution::memory_pool::{FairSpillPool, GreedyMemoryPool};
 use datafusion::execution::runtime_env::{RuntimeConfig, RuntimeEnv};
 use datafusion::prelude::SessionContext;
@@ -37,6 +37,7 @@ use datafusion_cli::{
 };
 
 use clap::Parser;
+use deltalake::delta_datafusion::DeltaTableFactory;
 use mimalloc::MiMalloc;
 
 #[global_allocator]
@@ -192,9 +193,21 @@ async fn main_inner() -> Result<()> {
 
     let runtime_env = create_runtime_env(rn_config.clone())?;
 
-    let mut ctx =
-        SessionContext::new_with_config_rt(session_config.clone(), Arc::new(runtime_env));
+    let mut state =
+        SessionState::new_with_config_rt(session_config.clone(), Arc::new(runtime_env));
+    
+    // registrer `DELTALAKE` datasource
+    state
+        .table_factories_mut()
+        .insert("DELTATABLE".into(), Arc::new(DeltaTableFactory {}));
+    // enable s3
+    deltalake::aws::register_handlers(None);
+
+    let mut ctx = SessionContext::new_with_state(state);
+    // let mut ctx =
+    //     SessionContext::new_with_config_rt(session_config.clone(), Arc::new(runtime_env));
     ctx.refresh_catalogs().await?;
+
     // install dynamic catalog provider that knows how to open files
     ctx.register_catalog_list(Arc::new(DynamicFileCatalog::new(
         ctx.state().catalog_list(),

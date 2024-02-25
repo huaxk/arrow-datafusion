@@ -36,6 +36,7 @@ aws-credential-types = "0.55"
 clap = { version = "3", features = ["derive", "cargo"] }
 datafusion = { path = "../datafusion/core", version = "35.0.0", features = ["avro", "crypto_expressions", "encoding_expressions", "parquet", "regex_expressions", "unicode_expressions", "compression"] }
 datafusion-common = { path = "../datafusion/common" }
+deltalake = { version = "0.17.0", features = ["datafusion", "datafusion-ext", "s3"] }
 dirs = "4.0.0"
 env_logger = "0.9"
 futures = "0.3"
@@ -53,3 +54,11 @@ assert_cmd = "2.0"
 ctor = "0.2.0"
 predicates = "3.0"
 rstest = "0.17"
+
+[patch.crates-io]
+datafusion = { path = "../datafusion/core" }
+datafusion-expr = { path = "../datafusion/expr" }
+datafusion-common = { path = "../datafusion/common" }
+datafusion-proto = { path = "../datafusion/proto" }
+datafusion-sql = { path = "../datafusion/sql" }
+datafusion-physical-expr = { path = "../datafusion/physical-expr" }
